@@ -1,2 +1,18 @@
 # crm-car-manufacturing
-CRM for car factories
+
+ # Stack
+- Python
+- DRF
+- Telegram 
+- Async
+- Celery
+- NoSQL
+- Psql
+- Docker-compose
+- Nginx
+- VueJS
+- Git
+- Linux
+- Gunicorn
+- Unittest
+- CI/CD 
