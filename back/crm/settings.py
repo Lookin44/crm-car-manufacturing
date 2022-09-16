@@ -17,8 +17,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # create apps
-    'apps.api',
-    'apps.user',
+    'apps.api.apps.ApiConfig',
+    'apps.users',
 
     # Third-party apps
     'rest_framework',
@@ -81,13 +81,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Europe/Moscow'
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.CustomUser'
