@@ -1,8 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from ..api.models.common import Shift, Zone
-from ..api.models.training import Training
+from .common import Shift, Zone
+from .training import Training
 
 
 class Position(models.Model):
@@ -17,6 +17,26 @@ class Position(models.Model):
         return self.name
 
 
+class UserTraining(models.Model):
+    user = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.CASCADE,
+        related_name='users_training'
+    )
+    training = models.ForeignKey(
+        Training,
+        on_delete=models.CASCADE,
+        related_name='trainings_user'
+    )
+
+    class Meta:
+        verbose_name = 'User training'
+        verbose_name_plural = 'User trainings'
+
+    def __str__(self):
+        return self.training.name
+
+
 class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
@@ -25,21 +45,30 @@ class CustomUser(AbstractUser):
         Position,
         on_delete=models.SET_NULL,
         related_name='users',
-        null=True
+        null=True,
+        blank=True
     )
     zone = models.ForeignKey(
         Zone,
         on_delete=models.SET_NULL,
         related_name='users',
-        null=True
+        null=True,
+        blank=True
     )
     shift = models.ForeignKey(
         Shift,
         on_delete=models.SET_NULL,
         related_name='users',
-        null=True
+        null=True,
+        blank=True
     )
-    training = models.ManyToManyField(Training, related_name='users')
+    training = models.ManyToManyField(
+        Training,
+        related_name='users',
+        blank=True,
+        through='UserTraining',
+        through_fields=('user', 'training')
+    )
 
     class Meta:
         verbose_name = 'User'
@@ -47,16 +76,3 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
-
-
-class TrainingUser(models.Model):
-    training = models.ForeignKey(
-        Training,
-        related_name='trainings_user',
-        on_delete=models.CASCADE
-    )
-    user = models.ForeignKey(
-        CustomUser,
-        related_name='users_training',
-        on_delete=models.CASCADE
-    )
