@@ -17,26 +17,6 @@ class Position(models.Model):
         return self.name
 
 
-class UserTraining(models.Model):
-    user = models.ForeignKey(
-        'CustomUser',
-        on_delete=models.CASCADE,
-        related_name='users_training'
-    )
-    training = models.ForeignKey(
-        Training,
-        on_delete=models.CASCADE,
-        related_name='trainings_user'
-    )
-
-    class Meta:
-        verbose_name = 'User training'
-        verbose_name_plural = 'User trainings'
-
-    def __str__(self):
-        return self.training.name
-
-
 class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
@@ -76,3 +56,23 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class UserTraining(models.Model):
+    user = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.CASCADE,
+        related_name='users_training'
+    )
+    training = models.ForeignKey(
+        Training,
+        on_delete=models.CASCADE,
+        related_name='trainings_user'
+    )
+
+    class Meta:
+        verbose_name = 'User training'
+        verbose_name_plural = 'User trainings'
+
+    def __str__(self):
+        return self.training.name
