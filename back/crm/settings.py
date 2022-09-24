@@ -1,6 +1,7 @@
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+print(BASE_DIR)
 
 SECRET_KEY = 'Your secret key'
 
@@ -17,7 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # create apps
-    'apps.api.apps.ApiConfig',
+    'apps.api',
     'apps.users',
 
     # Third-party apps

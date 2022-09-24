@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from ..api.models.common import Shift, Zone
+from ..api.models.training import Training
 
 
 class Position(models.Model):
@@ -38,6 +39,7 @@ class CustomUser(AbstractUser):
         related_name='users',
         null=True
     )
+    training = models.ManyToManyField(Training, related_name='users')
 
     class Meta:
         verbose_name = 'User'
@@ -45,3 +47,16 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class TrainingUser(models.Model):
+    training = models.ForeignKey(
+        Training,
+        related_name='trainings_user',
+        on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        CustomUser,
+        related_name='users_training',
+        on_delete=models.CASCADE
+    )

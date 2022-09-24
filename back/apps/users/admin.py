@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import CustomUser, Position
+from .models import CustomUser, Position, TrainingUser
+
+
+class TrainingUserInline(admin.TabularInline):
+    model = TrainingUser
+    fields = ['users', 'training']
 
 
 @admin.register(CustomUser)
@@ -19,3 +24,10 @@ class CustomUserAdmin(admin.ModelAdmin):
 @admin.register(Position)
 class PositionAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'grade')
+
+
+@admin.register(TrainingUser)
+class TrainingUserAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'training', 'user')
+    list_display_links = ('training', 'user')
+
