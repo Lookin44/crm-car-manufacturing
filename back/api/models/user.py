@@ -60,7 +60,7 @@ class CustomUser(AbstractUser):
 
 class UserTraining(models.Model):
     user = models.ForeignKey(
-        'CustomUser',
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='users_training'
     )

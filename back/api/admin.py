@@ -1,18 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
 
-from .models import (
-    CustomUser,
-    Position,
-    Shift,
-    Training,
-    UserTraining,
-    Zone,
-    DowntimeType,
-    Downtime,
-    Rotation,
-    Station
-)
+from .models import (CustomUser, Downtime, DowntimeType, Position, Rotation,
+                     Shift, Station, Training, UserTraining, Zone)
 
 
 class UserInline(admin.TabularInline):

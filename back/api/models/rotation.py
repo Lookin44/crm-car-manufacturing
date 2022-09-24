@@ -32,3 +32,10 @@ class Rotation(models.Model):
     )
     date_start = models.DateTimeField()
     date_stop = models.DateTimeField()
+
+    class Meta:
+        verbose_name = 'Rotation'
+        verbose_name_plural = 'Rotation'
+
+    def __str__(self):
+        return f'{self.user.username} - {self.station.name}'

@@ -23,7 +23,7 @@ class Downtime(models.Model):
         null=True,
         blank=True
     )
-    type = models.ForeignKey(
+    downtime_type = models.ForeignKey(
         DowntimeType,
         on_delete=models.SET_NULL,
         related_name='downtimes',
@@ -33,3 +33,10 @@ class Downtime(models.Model):
     time_start = models.DateTimeField(editable=True)
     time_amount = models.PositiveIntegerField()
     comment = models.CharField(max_length=256)
+
+    class Meta:
+        verbose_name = 'Downtime'
+        verbose_name_plural = 'Downtimes'
+
+    def __str__(self):
+        return self.downtime_type.name
