@@ -15,7 +15,7 @@ class Subpoint(models.Model):
         verbose_name_plural = 'Subpoints'
 
     def __str__(self):
-        return f'{self.question[:15]} - {self.answer[:15]}'
+        return f'{self.question[:15]}'
 
 
 class Action(models.Model):
@@ -53,7 +53,7 @@ class Equipment(models.Model):
 
 
 class OperationTimeAnalysis(models.Model):
-    standart_operating_time = models.FloatField()
+    standard_operating_time = models.FloatField()
     measured_time = models.FloatField()
     steps_amount = models.PositiveIntegerField()
     take_amount = models.PositiveIntegerField()
@@ -79,13 +79,13 @@ class OperationTimeAnalysis(models.Model):
         verbose_name_plural = 'OperationTimeAnalysis'
 
     def __str__(self):
-        return self.name
+        return f'{self.car_model.name} - {self.equipment.name}'
 
 
 class JobObservation(models.Model):
     date_observation = models.DateTimeField()
     focus = models.CharField(max_length=256)
-    impovements = models.CharField(max_length=256)
+    improvement = models.CharField(max_length=256)
     signature = models.BooleanField(default=False)
     zone = models.ForeignKey(
         Zone,
@@ -126,13 +126,13 @@ class JobObservation(models.Model):
         Subpoint,
         related_name='job_observations',
         through='SubpointJobObservation',
-        through_fields=('subpoint', 'job_observation')
+        through_fields=('job_observation', 'subpoint')
     )
     operational_time_analysis = models.ManyToManyField(
         OperationTimeAnalysis,
         related_name='job_observations',
         through='TimeAnalysisJobObservation',
-        through_fields=('time_analysis', 'job_observation')
+        through_fields=('job_observation', 'time_analysis')
     )
     comment_senior_supervisor = models.CharField(
         max_length=256,
@@ -144,18 +144,25 @@ class JobObservation(models.Model):
         Action,
         related_name='job_observations',
         through='ActionJobObservation',
-        through_fields=('action', 'job_observation')
+        through_fields=('job_observation', 'action')
     )
+
+    class Meta:
+        verbose_name = 'Job observation'
+        verbose_name_plural = 'Job observations'
+
+    def __str__(self):
+        return f'{self.date_observation}'
 
 
 class SubpointJobObservation(models.Model):
-    subpoint = models.ForeignKey(
-        Subpoint,
+    job_observation = models.ForeignKey(
+        JobObservation,
         on_delete=models.CASCADE,
         related_name='subpoint_job_observation'
     )
-    job_observation = models.ForeignKey(
-        JobObservation,
+    subpoint = models.ForeignKey(
+        Subpoint,
         on_delete=models.CASCADE,
         related_name='subpoint_job_observation'
     )
@@ -164,18 +171,15 @@ class SubpointJobObservation(models.Model):
         verbose_name = 'SubpointJobObservation'
         verbose_name_plural = 'SubpointJobObservations'
 
-    def __str__(self):
-        return self.job_observation.date_observation
-
 
 class TimeAnalysisJobObservation(models.Model):
-    time_analysis = models.ForeignKey(
-        OperationTimeAnalysis,
+    job_observation = models.ForeignKey(
+        JobObservation,
         on_delete=models.CASCADE,
         related_name='time_analysis_job_observation'
     )
-    job_observation = models.ForeignKey(
-        JobObservation,
+    time_analysis = models.ForeignKey(
+        OperationTimeAnalysis,
         on_delete=models.CASCADE,
         related_name='time_analysis_job_observation'
     )
@@ -184,18 +188,15 @@ class TimeAnalysisJobObservation(models.Model):
         verbose_name = 'TimeAnalysisJobObservation'
         verbose_name_plural = 'TimeAnalysisJobObservations'
 
-    def __str__(self):
-        return self.job_observation.date_observation
-
 
 class ActionJobObservation(models.Model):
-    action = models.ForeignKey(
-        Action,
+    job_observation = models.ForeignKey(
+        JobObservation,
         on_delete=models.CASCADE,
         related_name='action_job_observation'
     )
-    job_observation = models.ForeignKey(
-        JobObservation,
+    action = models.ForeignKey(
+        Action,
         on_delete=models.CASCADE,
         related_name='action_job_observation'
     )
@@ -203,6 +204,3 @@ class ActionJobObservation(models.Model):
     class Meta:
         verbose_name = 'ActionJobObservation'
         verbose_name_plural = 'ActionJobObservations'
-
-    def __str__(self):
-        return self.job_observation.date_observation
