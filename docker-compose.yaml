@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  back-end:
+    build: ./back
+    volumes:
+      - ./back/:/usr/src/back/
+    ports:
+      - 8000:8000
+    env_file:
+      - .env.dev
+    depends_on:
+      - data-base
+  
+  data-base:
+    image: postgres:15.1-alpine
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env.db.dev
