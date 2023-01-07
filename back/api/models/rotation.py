@@ -1,11 +1,19 @@
 from django.db import models
 
 from .user import CustomUser
+from .common import Zone
 
 
 class Station(models.Model):
     name = models.CharField(max_length=256, unique=True)
     description = models.CharField(max_length=256)
+    zone = models.ForeignKey(
+        Zone,
+        on_delete=models.SET_NULL,
+        related_name='zones',
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = 'Station'
