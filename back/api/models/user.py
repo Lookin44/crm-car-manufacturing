@@ -8,6 +8,7 @@ from .training import Training
 class Position(models.Model):
     name = models.CharField(max_length=256, unique=True)
     grade = models.CharField(max_length=256)
+    description = models.CharField(max_length=256)
 
     class Meta:
         verbose_name = 'Position'

@@ -130,3 +130,5 @@ dmypy.json
 /postgres_data/
 .env.db.dev
 .env.dev
+
+/data/

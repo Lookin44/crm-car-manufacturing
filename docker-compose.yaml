@@ -1,20 +1,27 @@
-version: '3.8'
+version: '3.9'
 
 services:
+
+  db:
+    image: postgres:15.1-alpine
+    container_name: ${PSQL_HOST}
+    restart: always
+    environment:
+      - POSTGRES_USER=${PSQL_USER}
+      - POSTGRES_PASSWORD=${PSQL_PASSWORD}
+      - POSTGRES_DB=${PSQL_DATABASE}
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   back-end:
     build: ./back
     volumes:
       - ./back/:/usr/src/back/
     ports:
-      - 8000:8000
+      - "8000:8000"
     env_file:
-      - .env.dev
+      - .env
     depends_on:
-      - data-base
-  
-  data-base:
-    image: postgres:15.1-alpine
-    volumes:
-      - ./postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - .env.db.dev
+      - db
