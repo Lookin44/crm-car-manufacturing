@@ -1,14 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .common import Shift, Zone
+from .common import Shop, Shift, Zone
 from .training import Training
 
 
 class Position(models.Model):
     name = models.CharField(max_length=256, unique=True)
     grade = models.CharField(max_length=256)
-    description = models.CharField(max_length=256)
+    description = models.CharField(max_length=256, null=True)
 
     class Meta:
         verbose_name = 'Position'
@@ -22,6 +22,8 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     patronymic = models.CharField(max_length=256)
+    employee_id = models.IntegerField(unique=True)
+    telegram_id = models.IntegerField(unique=True)
     position = models.ForeignKey(
         Position,
         on_delete=models.SET_NULL,
@@ -38,6 +40,13 @@ class CustomUser(AbstractUser):
     )
     shift = models.ForeignKey(
         Shift,
+        on_delete=models.SET_NULL,
+        related_name='users',
+        null=True,
+        blank=True
+    )
+    shop = models.ForeignKey(
+        Shop,
         on_delete=models.SET_NULL,
         related_name='users',
         null=True,

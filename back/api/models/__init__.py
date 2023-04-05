@@ -1,4 +1,4 @@
-from .common import Shift, Zone
+from .common import Shop, Shift, Zone
 from .downtime import DowntimeType, Downtime
 from .job_observation import (Subpoint, Action, CarModel, Equipment,
                               OperationTimeAnalysis, JobObservation,
@@ -10,23 +10,24 @@ from .training import Training
 from .user import CustomUser, Position, UserTraining
 
 __all__ = [
-    Action,
-    ActionJobObservation,
-    CarModel,
-    CustomUser,
-    Downtime,
-    DowntimeType,
-    Equipment,
-    JobObservation,
-    OperationTimeAnalysis,
-    Position,
-    Rotation,
-    Shift,
-    Station,
-    Subpoint,
-    SubpointJobObservation,
-    Training,
-    TimeAnalysisJobObservation,
-    UserTraining,
-    Zone
+    'Action',
+    'ActionJobObservation',
+    'CarModel',
+    'CustomUser',
+    'Downtime',
+    'DowntimeType',
+    'Equipment',
+    'JobObservation',
+    'OperationTimeAnalysis',
+    'Position',
+    'Rotation',
+    'Shop',
+    'Shift',
+    'Station',
+    'Subpoint',
+    'SubpointJobObservation',
+    'Training',
+    'TimeAnalysisJobObservation',
+    'UserTraining',
+    'Zone'
 ]

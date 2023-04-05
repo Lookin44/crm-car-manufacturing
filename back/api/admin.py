@@ -35,7 +35,7 @@ class ZoneAdmin(admin.ModelAdmin):
 
 @admin.register(Shift)
 class ShiftAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name')
+    list_display = ('pk', 'letter_designation')
 
 
 @admin.register(Training)

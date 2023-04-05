@@ -20,6 +20,7 @@ INSTALLED_APPS = [
 
     # create apps
     'api',
+    'telegram_bot',
 
     # Third-party apps
     'rest_framework',
