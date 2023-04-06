@@ -50,9 +50,10 @@ async def start(
     if user_exist := await CustomUser.objects.filter(
             telegram_id=user_telegram_id
     ).aexists():
+        user = await CustomUser.objects.aget(telegram_id=user_telegram_id)
         await update.message.reply_text(
-            f"Здравствуйте, {telegram_user.first_name} "
-            f"{telegram_user.last_name}!"
+            f"Добро пожаловать обратно, {user.first_name} "
+            f"{user.patronymic}!"
         )
     else:
         await update.message.reply_text(
