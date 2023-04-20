@@ -17,15 +17,13 @@ from .keyboards import (
     choice_zone_keyboard,
     choice_position_keyboard
 )
-
-
-CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+from telegram_bot.state_list import *
 
 
 async def registration(
         update: Update,
         context: ContextTypes.DEFAULT_TYPE
-) -> int:
+) -> str:
 
     await update.message.reply_text(
         "Заполните поля для регистрации:",
@@ -59,14 +57,8 @@ async def handle_employee_id(
         update: Update,
         context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    buttons = [
-        InlineKeyboardButton(str(i), callback_data=str(i))
-        for i in range(10)
-    ]
-    keyboard = InlineKeyboardMarkup([buttons])
     await update.message.reply_text(
-        "Введите Ваш табельный номер:",
-        reply_markup=keyboard
+        "Введите Ваш табельный номер:"
     )
 
 
@@ -76,7 +68,7 @@ async def handle_shift(
 ) -> None:
     await update.message.reply_text(
         "Укажите Вашу смену:",
-        reply_markup=choice_shift_keyboard()
+        reply_markup=await choice_shift_keyboard()
     )
 
 
@@ -86,7 +78,7 @@ async def handle_shop(
 ) -> None:
     await update.message.reply_text(
         "Укажите Ваш цех:",
-        reply_markup=choice_shop_keyboard()
+        reply_markup=await choice_shop_keyboard()
     )
 
 
@@ -97,7 +89,7 @@ async def handle_zone(
     shop_name = context.user_data['Цех']
     await update.message.reply_text(
         "Укажите Ваш участок:",
-        reply_markup=choice_zone_keyboard(shop_name)
+        reply_markup=await choice_zone_keyboard(shop_name)
     )
 
 
@@ -107,14 +99,14 @@ async def handle_position(
 ) -> None:
     await update.message.reply_text(
         "Укажите Вашу должность:",
-        reply_markup=choice_position_keyboard()
+        reply_markup=await choice_position_keyboard()
     )
 
 
 async def regular_choice(
         update: Update,
         context: ContextTypes.DEFAULT_TYPE
-) -> int:
+) -> str:
 
     switcher = {
         "Имя": handle_name,
@@ -143,7 +135,7 @@ async def regular_choice(
 async def received_information(
         update: Update,
         context: ContextTypes.DEFAULT_TYPE
-) -> int:
+) -> str:
     user_data = context.user_data
     text = update.message.text
     category = user_data["choice"]
@@ -189,7 +181,7 @@ async def create_user(
     return ConversationHandler.END
 
 
-registration_dialog = ConversationHandler(
+registration_handler = ConversationHandler(
     entry_points=[CommandHandler('registration', registration)],
     states={
         CHOOSING: [

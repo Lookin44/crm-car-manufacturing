@@ -1,8 +1,6 @@
 import datetime
 from typing import Dict
 
-from django.utils.timezone import now
-
 
 def facts_to_str(user_data: Dict[str, str]) -> str:
     facts = [f"{key} - {value}" for key, value in user_data.items()]
@@ -10,8 +8,7 @@ def facts_to_str(user_data: Dict[str, str]) -> str:
 
 
 def check_time() -> str:
-    current_time = now().time()
-    print(current_time)
+    current_time = datetime.datetime.now().time()
     time_dict = {
         'Доброе утро': (datetime.time(6, 0), datetime.time(12, 0)),
         'Добрый день': (datetime.time(12, 0), datetime.time(18, 0)),
