@@ -10,5 +10,16 @@ from telegram.ext import ConversationHandler
     CHOOSE_ACTION,
     CONFIRM,
     DISAGREE,
-) = map(chr, range(8))
+    NAME,
+    LAST_NAME,
+    PATRONYMIC,
+    EMPLOYEE_ID,
+    TYPING,
+    PHOTO,
+    SHIFT,
+    POSITION,
+    SHOP,
+    ZONE,
+    CHOOSE_EDIT_INFO
+) = map(chr, range(19))
 END = ConversationHandler.END

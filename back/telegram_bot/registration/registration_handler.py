@@ -1,206 +1,86 @@
-from telegram import ReplyKeyboardRemove, Update, InlineKeyboardMarkup, \
+from uuid import uuid4
+
+from telegram import (
+    ReplyKeyboardRemove,
+    Update,
+    InlineKeyboardMarkup,
     InlineKeyboardButton
+)
 from telegram.ext import (
     CommandHandler,
     ContextTypes,
     ConversationHandler,
     MessageHandler,
-    filters,
+    filters, CallbackQueryHandler,
 )
 
 from api.models import *
 from telegram_bot.utils import facts_to_str
 from .keyboards import (
-    main_choice_keyboard,
-    choice_shop_keyboard,
     choice_shift_keyboard,
-    choice_zone_keyboard,
-    choice_position_keyboard
 )
 from telegram_bot.state_list import *
 
 
-async def registration(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> str:
-
-    await update.message.reply_text(
-        "Заполните поля для регистрации:",
-        reply_markup=main_choice_keyboard()
-    )
-    return CHOOSING
-
-
-async def handle_name(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    await update.message.reply_text("Введите Ваше имя:")
+text_launch = {
+    NAME: {'text': 'Укажите Вашу фамилию:', 'exit_point': LAST_NAME},
+    LAST_NAME: {'text': 'Укажите Ваше отчество:', 'exit_point': PATRONYMIC},
+    PATRONYMIC: {'text': 'Укажите Ваш табельный номер:', 'exit_point': EMPLOYEE_ID},
+    EMPLOYEE_ID: {'text': 'Сделайте свое селфи', 'exit_point': PHOTO},
+    PHOTO: {'text': 'Укажите Вашу смену:', 'exit_point': SHIFT},
+    SHIFT: {'text': 'Укажите Вашу должность:', 'exit_point': POSITION},
+    POSITION: {'text': 'Укажите Ваш цех:', 'exit_point': SHOP},
+    SHOP: {'text': 'Укажите Ваш участок', 'exit_point': ZONE},
+    ZONE: {'text': 'Сделайте свое селфи', 'exit_point': CHOOSE_EDIT_INFO},
+}
 
 
-async def handle_surname(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    await update.message.reply_text("Введите Вашу фамилию:")
+async def start_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['current_state'] = NAME
+    await update.callback_query.edit_message_text('Укажите Ваше имя:')
+    return NAME
 
 
-async def handle_patronymic(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    await update.message.reply_text("Введите Ваше отчество:")
-
-
-async def handle_employee_id(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    await update.message.reply_text(
-        "Введите Ваш табельный номер:"
-    )
-
-
-async def handle_shift(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    await update.message.reply_text(
-        "Укажите Вашу смену:",
-        reply_markup=await choice_shift_keyboard()
-    )
-
-
-async def handle_shop(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    await update.message.reply_text(
-        "Укажите Ваш цех:",
-        reply_markup=await choice_shop_keyboard()
-    )
-
-
-async def handle_zone(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    shop_name = context.user_data['Цех']
-    await update.message.reply_text(
-        "Укажите Ваш участок:",
-        reply_markup=await choice_zone_keyboard(shop_name)
-    )
-
-
-async def handle_position(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    await update.message.reply_text(
-        "Укажите Вашу должность:",
-        reply_markup=await choice_position_keyboard()
-    )
-
-
-async def regular_choice(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> str:
-
-    switcher = {
-        "Имя": handle_name,
-        "Фамилия": handle_surname,
-        "Отчество": handle_patronymic,
-        "Смена": handle_shift,
-        "Цех": handle_shop,
-        "Участок": handle_zone,
-        "Табельный номер": handle_employee_id,
-        "Должность": handle_position,
-    }
-
-    text = update.message.text
-    context.user_data["choice"] = text
-
-    if text in switcher:
-        await switcher[text](update, context)
-        return TYPING_REPLY
-    else:
-        await update.message.reply_text(
-            "Я не понимаю, о чем Вы говорите. Попробуйте еще раз."
-        )
-        return CHOOSING
-
-
-async def received_information(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> str:
+async def typing_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
-    text = update.message.text
-    category = user_data["choice"]
-    user_data[category] = text
-    del user_data["choice"]
+    current_state = user_data.get('current_state')
 
-    await update.message.reply_text(
-        "Ваши данные:"
-        f"{facts_to_str(user_data)}"
-        "Если все верно, нажмите готово.",
-        reply_markup=main_choice_keyboard(),
-    )
+    if current_state == NAME or LAST_NAME or PATRONYMIC or EMPLOYEE_ID:
+        user_data[current_state] = update.message.text
+    elif current_state == PHOTO:
+        photo_file = await update.message.photo[-1].get_file()
+        file_name = f'{uuid4()}.jpg'
+        await photo_file.download_to_drive(file_name)
+        await update.message.reply_text('Ну норм')
 
-    return CHOOSING
+    await update.message.reply_text(text_launch.get(current_state).get('text'))
+    exit_point = text_launch.get(current_state).get('exit_point')
+    user_data['current_state'] = exit_point
+    return exit_point
 
 
-async def create_user(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
-) -> int:
-
-    user_data = context.user_data
-    if "choice" in user_data:
-        del user_data["choice"]
-
-    await CustomUser.objects.acreate(
-        first_name=user_data['Имя'],
-        last_name=user_data['Фамилия'],
-        patronymic=user_data['Отчество'],
-        telegram_id=update.effective_user.id,
-        employee_id=user_data['Табельный номер'],
-        shift=await Shift.objects.aget(letter_designation=user_data['Смена']),
-        shop=await Shop.objects.aget(name=user_data['Цех']),
-        zone=await Zone.objects.aget(name=user_data['Участок'])
-    )
-
-    await update.message.reply_text(
-        f"Эти данные занесены в базу данных {facts_to_str(user_data)}",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-
-    user_data.clear()
-    return ConversationHandler.END
+async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from telegram_bot.start.start_handler import start
+    context.user_data['START_OVER'] = True
+    await start(update, context)
+    return END
 
 
 registration_handler = ConversationHandler(
-    entry_points=[CommandHandler('registration', registration)],
+    entry_points=[CallbackQueryHandler(start_reg)],
     states={
-        CHOOSING: [
-            MessageHandler(
-                filters.Regex(
-                    "^(Имя|Фамилия|Отчество|Смена|Цех|"
-                    "Участок|Табельный номер|Должность)$"
-                ),
-                regular_choice,
-            )
-        ],
-        TYPING_REPLY: [
-            MessageHandler(
-                filters.TEXT & ~(
-                        filters.COMMAND | filters.Regex("^Готово$")
-                ),
-                received_information,
-            )
-        ],
+        NAME:
+            [MessageHandler(filters.TEXT & ~filters.COMMAND, typing_answer)],
+        LAST_NAME:
+            [MessageHandler(filters.TEXT & ~filters.COMMAND, typing_answer)],
+        PATRONYMIC:
+            [MessageHandler(filters.TEXT & ~filters.COMMAND, typing_answer)],
+        EMPLOYEE_ID:
+            [MessageHandler(filters.TEXT & ~filters.COMMAND, typing_answer)],
+        PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, typing_answer)]
     },
-    fallbacks=[MessageHandler(filters.Regex("^Готово$"), create_user)],
+    fallbacks=[CallbackQueryHandler(done, pattern="^" + str(END) + "$")],
+    map_to_parent={
+        END: CHOOSE_ACTION,
+    }
 )

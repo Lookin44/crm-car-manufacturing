@@ -9,11 +9,18 @@ from telegram.ext import (
 from api.models import *
 from telegram_bot.utils import check_time
 from telegram_bot.state_list import *
-from telegram_bot.registration import registration_handler
+from telegram_bot.registration.registration_handler import registration_handler
 from telegram_bot.start.keyboard import greeting_buttons, confirm_buttons
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = 'Выберите дальнейшее действие.'
+    if context.user_data.get('START_OVER'):
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(greeting_buttons)
+        )
     user = update.effective_user
     if await CustomUser.objects.filter(telegram_id=user.id).aexists():
         user_db = await CustomUser.objects.aget(telegram_id=user.id)
@@ -21,7 +28,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"{check_time()}, {user_db.first_name} {user_db.patronymic}!"
         )
     else:
-        text = 'Вас еще нет в базе данных, предлагаю выполнить регистрацию:'
         await update.message.reply_text(
             f"{check_time()}, {user.first_name} {user.last_name}! "
         )
@@ -33,8 +39,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def add_myself(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = 'Вы готовы предоставить мне свои данные? ' \
-           'Не волнуйтесь эти данные будут храниться на нашем сервере.'
+    text = 'Вы готовы начать?'
     await update.callback_query.answer()
     await update.callback_query.edit_message_text(
         text=text,
