@@ -37,6 +37,7 @@ text_launch = {
 
 async def start_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['current_state'] = NAME
+    await update.callback_query.answer()
     await update.callback_query.edit_message_text('Укажите Ваше имя:')
     return NAME
 
@@ -44,19 +45,41 @@ async def start_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def typing_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
     current_state = user_data.get('current_state')
+    message_text = text_launch.get(current_state).get('text')
 
-    if current_state == NAME or LAST_NAME or PATRONYMIC or EMPLOYEE_ID:
-        user_data[current_state] = update.message.text
-    elif current_state == PHOTO:
-        photo_file = await update.message.photo[-1].get_file()
-        file_name = f'{uuid4()}.jpg'
-        await photo_file.download_to_drive(file_name)
-        await update.message.reply_text('Ну норм')
+    user_data[current_state] = update.message.text
 
-    await update.message.reply_text(text_launch.get(current_state).get('text'))
+    await update.message.reply_text(message_text)
+
     exit_point = text_launch.get(current_state).get('exit_point')
     user_data['current_state'] = exit_point
     return exit_point
+
+
+async def photo_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    current_state = user_data.get('current_state')
+    message_text = text_launch.get(current_state).get('text')
+
+    photo_file = await update.message.photo[-1].get_file()
+    file_name = f'{uuid4()}.jpg'
+    await photo_file.download_to_drive(file_name)
+    await update.message.reply_text(message_text, reply_markup=await choice_shift_keyboard())
+
+    exit_point = text_launch.get(current_state).get('exit_point')
+    user_data['current_state'] = exit_point
+    return exit_point
+
+
+async def shift(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    current_state = user_data.get('current_state')
+    message_text = text_launch.get(current_state).get('text')
+
+    print(update.callback_query.data)
+
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(message_text)
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,7 +100,8 @@ registration_handler = ConversationHandler(
             [MessageHandler(filters.TEXT & ~filters.COMMAND, typing_answer)],
         EMPLOYEE_ID:
             [MessageHandler(filters.TEXT & ~filters.COMMAND, typing_answer)],
-        PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, typing_answer)]
+        PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, photo_save)],
+        SHIFT: [CallbackQueryHandler(shift)]
     },
     fallbacks=[CallbackQueryHandler(done, pattern="^" + str(END) + "$")],
     map_to_parent={

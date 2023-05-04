@@ -5,7 +5,7 @@ from api.models import *
 
 async def choice_shift_keyboard():
     button = [
-        [InlineKeyboardButton(text=shift.name, callback_data=shift) async for shift in Shift.objects.all()]
+        [InlineKeyboardButton(text=shift.letter_designation, callback_data=shift.id)] async for shift in Shift.objects.all()
     ]
     return InlineKeyboardMarkup(button)
 
