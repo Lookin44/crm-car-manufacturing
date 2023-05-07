@@ -113,3 +113,15 @@ class Command(BaseCommand):
             name='Менеджер цеха',
             grade='EVP-4',
         )
+        positions_names = [
+            paint_line_operator,
+            painter,
+            body_straightener,
+            technician_technologist,
+            team_leader,
+            supervisor,
+            engineer,
+            senior_supervisor,
+            manager,
+        ]
+        Position.objects.bulk_create(positions_names)

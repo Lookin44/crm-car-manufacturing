@@ -14,10 +14,11 @@ from telegram.ext import (
     filters, CallbackQueryHandler,
 )
 
-from api.models import *
-from telegram_bot.utils import facts_to_str
 from .keyboards import (
     choice_shift_keyboard,
+    choice_shop_keyboard,
+    choice_zone_keyboard,
+    choice_position_keyboard,
 )
 from telegram_bot.state_list import *
 
@@ -31,7 +32,7 @@ text_launch = {
     SHIFT: {'text': 'Укажите Вашу должность:', 'exit_point': POSITION},
     POSITION: {'text': 'Укажите Ваш цех:', 'exit_point': SHOP},
     SHOP: {'text': 'Укажите Ваш участок', 'exit_point': ZONE},
-    ZONE: {'text': 'Сделайте свое селфи', 'exit_point': CHOOSE_EDIT_INFO},
+    ZONE: {'text': 'Верны ли следующие данные:', 'exit_point': CHOOSE_EDIT_INFO},
 }
 
 
@@ -46,12 +47,12 @@ async def typing_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
     current_state = user_data.get('current_state')
     message_text = text_launch.get(current_state).get('text')
+    exit_point = text_launch.get(current_state).get('exit_point')
 
     user_data[current_state] = update.message.text
 
     await update.message.reply_text(message_text)
 
-    exit_point = text_launch.get(current_state).get('exit_point')
     user_data['current_state'] = exit_point
     return exit_point
 
@@ -60,26 +61,89 @@ async def photo_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
     current_state = user_data.get('current_state')
     message_text = text_launch.get(current_state).get('text')
+    exit_point = text_launch.get(current_state).get('exit_point')
 
     photo_file = await update.message.photo[-1].get_file()
     file_name = f'{uuid4()}.jpg'
     await photo_file.download_to_drive(file_name)
-    await update.message.reply_text(message_text, reply_markup=await choice_shift_keyboard())
+    await update.message.reply_text(
+        message_text,
+        reply_markup=await choice_shift_keyboard()
+    )
 
-    exit_point = text_launch.get(current_state).get('exit_point')
     user_data['current_state'] = exit_point
     return exit_point
 
 
-async def shift(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def shift_choose(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
     current_state = user_data.get('current_state')
     message_text = text_launch.get(current_state).get('text')
+    exit_point = text_launch.get(current_state).get('exit_point')
 
-    print(update.callback_query.data)
+    user_data[current_state] = update.callback_query.data
 
     await update.callback_query.answer()
-    await update.callback_query.edit_message_text(message_text)
+    await update.callback_query.edit_message_text(
+        message_text,
+        reply_markup=await choice_position_keyboard()
+    )
+    user_data['current_state'] = exit_point
+    return exit_point
+
+
+async def position_choose(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    current_state = user_data.get('current_state')
+    message_text = text_launch.get(current_state).get('text')
+    exit_point = text_launch.get(current_state).get('exit_point')
+
+    user_data[current_state] = update.callback_query.data
+
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        message_text,
+        reply_markup=await choice_shop_keyboard()
+    )
+    user_data['current_state'] = exit_point
+    return exit_point
+
+
+async def shop_choose(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    current_state = user_data.get('current_state')
+    message_text = text_launch.get(current_state).get('text')
+    exit_point = text_launch.get(current_state).get('exit_point')
+
+    user_data[current_state] = update.callback_query.data
+
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        message_text,
+        reply_markup=await choice_zone_keyboard(user_data.get(current_state))
+    )
+    user_data['current_state'] = exit_point
+
+    return exit_point
+
+
+async def zone_choose(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    current_state = user_data.get('current_state')
+    message_text = text_launch.get(current_state).get('text')
+    exit_point = text_launch.get(current_state).get('exit_point')
+
+    user_data[current_state] = update.callback_query.data
+
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        message_text,
+        reply_markup=await choice_zone_keyboard(user_data.get(current_state))
+    )
+    user_data['current_state'] = exit_point
+
+    print(user_data)
+    return exit_point
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -101,7 +165,10 @@ registration_handler = ConversationHandler(
         EMPLOYEE_ID:
             [MessageHandler(filters.TEXT & ~filters.COMMAND, typing_answer)],
         PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, photo_save)],
-        SHIFT: [CallbackQueryHandler(shift)]
+        SHIFT: [CallbackQueryHandler(shift_choose)],
+        POSITION: [CallbackQueryHandler(position_choose)],
+        SHOP: [CallbackQueryHandler(shop_choose)],
+        ZONE: [CallbackQueryHandler(zone_choose)],
     },
     fallbacks=[CallbackQueryHandler(done, pattern="^" + str(END) + "$")],
     map_to_parent={
