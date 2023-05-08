@@ -1,4 +1,5 @@
 from uuid import uuid4
+from pathlib import Path
 
 from telegram import (
     ReplyKeyboardRemove,
@@ -106,7 +107,8 @@ async def photo_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     photo_file = await update.message.photo[-1].get_file()
     file_name = f'{uuid4()}.jpg'
-    await photo_file.download_to_drive(file_name)
+    temp_path = Path.cwd() / 'telegram_bot' / 'registration' / 'temp_media'
+    await photo_file.download_to_drive(custom_path=str(temp_path/file_name))
     await update.message.reply_text(
         message_text,
         reply_markup=await choice_shift_keyboard()

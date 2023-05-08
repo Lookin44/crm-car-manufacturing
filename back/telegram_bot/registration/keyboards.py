@@ -45,7 +45,7 @@ async def choice_position_keyboard():
     return InlineKeyboardMarkup(button)
 
 
-async def data_keyboard(context: ContextTypes.DEFAULT_TYPE):
+def data_keyboard(context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
     user_name = user_data.get(NAME)
     user_last_name = user_data.get(LAST_NAME)
@@ -68,5 +68,6 @@ async def data_keyboard(context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton(text=user_shop, callback_data=SHOP),
             InlineKeyboardButton(text=user_zone, callback_data=ZONE),
         ],
+        [InlineKeyboardButton(text='✅ Все верно ✅', callback_data=END),],
     ]
     return InlineKeyboardMarkup(button)

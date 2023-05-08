@@ -21,6 +21,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text,
             reply_markup=InlineKeyboardMarkup(greeting_buttons)
         )
+        return CHOOSE_ACTION
+
     user = update.effective_user
     if await CustomUser.objects.filter(telegram_id=user.id).aexists():
         user_db = await CustomUser.objects.aget(telegram_id=user.id)
@@ -35,7 +37,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text,
             reply_markup=InlineKeyboardMarkup(greeting_buttons)
         )
-    return CHOOSE_ACTION
+        return CHOOSE_ACTION
 
 
 async def add_myself(update: Update, context: ContextTypes.DEFAULT_TYPE):
