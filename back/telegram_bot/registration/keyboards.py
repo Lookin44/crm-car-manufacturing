@@ -47,27 +47,37 @@ async def choice_position_keyboard():
 
 def data_keyboard(context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
-    user_name = user_data.get(NAME)
-    user_last_name = user_data.get(LAST_NAME)
-    user_patronymic = user_data.get(PATRONYMIC)
-    user_employee_id = user_data.get(EMPLOYEE_ID)
-    user_shift = user_data.get(SHIFT)
-    user_position = user_data.get(POSITION)
-    user_shop = user_data.get(SHOP)
-    user_zone = user_data.get(ZONE)
+    user_name = InlineKeyboardButton(
+        text=user_data.get(NAME), callback_data=NAME
+    )
+    user_last_name = InlineKeyboardButton(
+        text=user_data.get(LAST_NAME), callback_data=LAST_NAME
+    )
+    user_patronymic = InlineKeyboardButton(
+        text=user_data.get(PATRONYMIC), callback_data=PATRONYMIC
+    )
+    user_employee_id = InlineKeyboardButton(
+        text=user_data.get(EMPLOYEE_ID), callback_data=EMPLOYEE_ID
+    )
+    user_shift = InlineKeyboardButton(
+        text=user_data.get(SHIFT), callback_data=POSITION
+    )
+    user_position = InlineKeyboardButton(
+        text=user_data.get(POSITION), callback_data=SHIFT
+    )
+    user_shop = InlineKeyboardButton(
+        text=user_data.get(SHOP), callback_data=SHOP
+    )
+    user_zone = InlineKeyboardButton(
+        text=user_data.get(ZONE), callback_data=ZONE
+    )
+    done = InlineKeyboardButton(
+        text='✅ Все верно ✅', callback_data=END
+    )
     button = [
-        [
-            InlineKeyboardButton(text=user_name, callback_data=NAME),
-            InlineKeyboardButton(text=user_last_name, callback_data=LAST_NAME),
-        ],
-        [InlineKeyboardButton(text=user_patronymic, callback_data=PATRONYMIC),],
-        [InlineKeyboardButton(text=user_employee_id, callback_data=EMPLOYEE_ID),],
-        [InlineKeyboardButton(text=user_position, callback_data=POSITION),],
-        [
-            InlineKeyboardButton(text=user_shift, callback_data=SHIFT),
-            InlineKeyboardButton(text=user_shop, callback_data=SHOP),
-            InlineKeyboardButton(text=user_zone, callback_data=ZONE),
-        ],
-        [InlineKeyboardButton(text='✅ Все верно ✅', callback_data=END),],
+        [user_name, user_last_name, user_patronymic],
+        [user_employee_id, user_position],
+        [user_shift, user_shop, user_zone],
+        [done]
     ]
     return InlineKeyboardMarkup(button)

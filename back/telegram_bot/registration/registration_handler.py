@@ -50,6 +50,7 @@ text_launch = {
         {
             'text': 'Укажите Вашу смену:',
             'exit_point': SHIFT,
+            'keyboard': choice_shift_keyboard,
         },
     SHIFT:
         {
@@ -78,18 +79,29 @@ text_launch = {
 }
 
 
+def open_userdata(some_data: dict):
+    user_data = some_data
+    current_state = user_data.get('current_state')
+    message_text = text_launch.get(current_state).get('text')
+    exit_point = text_launch.get(current_state).get('exit_point')
+    keyboard = text_launch.get(current_state).get('keyboard', None)
+    return user_data, current_state, message_text, exit_point, keyboard
+
+
 async def start_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['current_state'] = NAME
-    await update.callback_query.answer()
     await update.callback_query.edit_message_text('Укажите Ваше имя:')
     return NAME
 
 
 async def typing_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_data = context.user_data
-    current_state = user_data.get('current_state')
-    message_text = text_launch.get(current_state).get('text')
-    exit_point = text_launch.get(current_state).get('exit_point')
+    (
+        user_data,
+        current_state,
+        message_text,
+        exit_point,
+        keyboard
+    ) = open_userdata(context.user_data)
 
     user_data[current_state] = update.message.text
 
@@ -100,18 +112,22 @@ async def typing_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def photo_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_data = context.user_data
-    current_state = user_data.get('current_state')
-    message_text = text_launch.get(current_state).get('text')
-    exit_point = text_launch.get(current_state).get('exit_point')
+    (
+        user_data,
+        current_state,
+        message_text,
+        exit_point,
+        keyboard
+    ) = open_userdata(context.user_data)
 
     photo_file = await update.message.photo[-1].get_file()
     file_name = f'{uuid4()}.jpg'
     temp_path = Path.cwd() / 'telegram_bot' / 'registration' / 'temp_media'
+    user_data[current_state] = str(temp_path/file_name)
     await photo_file.download_to_drive(custom_path=str(temp_path/file_name))
     await update.message.reply_text(
         message_text,
-        reply_markup=await choice_shift_keyboard()
+        reply_markup=await keyboard()
     )
 
     user_data['current_state'] = exit_point
@@ -119,15 +135,16 @@ async def photo_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def choose_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_data = context.user_data
-    current_state = user_data.get('current_state')
-    message_text = text_launch.get(current_state).get('text')
-    exit_point = text_launch.get(current_state).get('exit_point')
-    keyboard = text_launch.get(current_state).get('keyboard')
+    (
+        user_data,
+        current_state,
+        message_text,
+        exit_point,
+        keyboard
+    ) = open_userdata(context.user_data)
 
     user_data[current_state] = update.callback_query.data
 
-    await update.callback_query.answer()
     if current_state == SHOP:
         await update.callback_query.edit_message_text(
             message_text,
@@ -138,6 +155,7 @@ async def choose_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             message_text,
             reply_markup=keyboard(context)
         )
+        print(user_data)
     else:
         await update.callback_query.edit_message_text(
             message_text,
@@ -148,10 +166,62 @@ async def choose_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    from telegram_bot.start.start_handler import start
+    await update.callback_query.answer(
+        text='Поздравляю, Вы зарегистрировались! 🤘',
+        show_alert=True
+    )
     context.user_data['START_OVER'] = True
+    from telegram_bot.start.start_handler import start
     await start(update, context)
     return END
+
+
+async def edit_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    current_state = update.callback_query.data
+    user_data['current_state'] = current_state
+    if current_state == NAME or LAST_NAME or PATRONYMIC or EMPLOYEE_ID:
+        await update.callback_query.edit_message_text(
+            'Введите новые данные:'
+        )
+        return SAVE_TYPING_ANSWER
+    elif current_state == SHIFT or POSITION or SHOP or ZONE:
+        keyboard = None
+        if current_state == SHIFT:
+            keyboard = await choice_shift_keyboard()
+        elif current_state == SHOP:
+            keyboard = await choice_shop_keyboard()
+        await update.callback_query.edit_message_text(
+            'Выберите новые данные:',
+            reply_markup=keyboard
+        )
+        return SAVE_CHOOSING_ANSWER
+
+
+async def save_typing_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    text = update.message.text
+    current_state = user_data.get('current_state')
+    user_data[current_state] = text
+    await update.message.reply_text(
+        'Верны ли следующие данные:',
+        reply_markup=data_keyboard(context)
+    )
+    print(user_data)
+    return CHOOSE_EDIT_INFO
+
+
+async def save_choosing_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data
+    new_data = update.callback_query.data
+    current_state = user_data.get('current_state')
+    user_data[current_state] = new_data
+    await update.callback_query.edit_message_text(
+        'Верны ли следующие данные:',
+        reply_markup=data_keyboard(context)
+    )
+    print(user_data)
+    return CHOOSE_EDIT_INFO
 
 
 registration_handler = ConversationHandler(
@@ -170,6 +240,14 @@ registration_handler = ConversationHandler(
         POSITION: [CallbackQueryHandler(choose_answer)],
         SHOP: [CallbackQueryHandler(choose_answer)],
         ZONE: [CallbackQueryHandler(choose_answer)],
+        CHOOSE_EDIT_INFO: [CallbackQueryHandler(
+            edit_data, pattern='^(?!' + str(END) + ').*$'
+        )],
+        SAVE_TYPING_ANSWER:
+            [MessageHandler(
+                filters.TEXT & ~filters.COMMAND, save_typing_answer
+            )],
+        SAVE_CHOOSING_ANSWER: [CallbackQueryHandler(choose_answer)],
     },
     fallbacks=[CallbackQueryHandler(done, pattern="^" + str(END) + "$")],
     map_to_parent={
